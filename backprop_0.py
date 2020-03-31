@@ -106,3 +106,5 @@ class network:
 model= network(X_train, Y_train, X_test, Y_test, [150,150])
 model.feedforward(1)
 model.backpropagate(1)
+
+'Babudinibich'
