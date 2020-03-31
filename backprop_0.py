@@ -50,9 +50,9 @@ class network:
         print(self.w1.shape)
         self.b1 = np.zeros(self.hidd1_size)
         self.w2 = np.random.randn(self.hidd2_size, self.hidd1_size) / np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,150)
-        self.b1 = np.zeros(self.hidd2_size)
-        self.w1 = np.random.randn(self.output_size, self.hidd2_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(10,150)
-        self.b1 = np.zeros(self.output_size)
+        self.b2 = np.zeros(self.hidd2_size)
+        self.w3 = np.random.randn(self.output_size, self.hidd2_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(10,150)
+        self.b3 = np.zeros(self.output_size)
 
         #minibatches are only for training and validating
         self.minibatch_size = batch_size
@@ -67,10 +67,10 @@ class network:
     def feedforward(self, batch_index):
 
         self.z1 = self.minibatches_X[batch_index] @ self.w1.T + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
-        self.a1 = relu(z1)
+        self.a1 = relu(self.z1)
 
         self.z2 = self.a1 @ self.w2.T + self.b2
-        self.a2 = relu(z2)
+        self.a2 = relu(self.z2)
 
         self.z3 = self.a2 @ self.w3.T + self.b3
         self.a3 = softmax(self.z3)
