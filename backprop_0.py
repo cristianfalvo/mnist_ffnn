@@ -17,6 +17,20 @@ Y_train = y
 y = np.eye(10)[Y_test.astype('int32')]
 Y_test = y
 
+def relu(z):
+    return max(0,z)
+
+def relu1(z):
+    return np.where(z>0, z, 0)
+
+def softmax(z):#(30,10)
+    b= np.amax(z, axis = 1)
+    s = np.exp(z-b.T)
+    print(z.shape)
+    print(b.shape)
+    print(s.shape)
+
+
 class network:
     def __init__(self, X_train, Y_train, X_test, Y_test, hidden_layers, learning_rate = 1, batch_size = 30):
         self.X_train = X_train
@@ -32,11 +46,12 @@ class network:
         self.learning_rate = learning_rate
 
         #weights and biases
-        self.w1 = np.random.randn(self.hidd1_size, self.input_size) / np.sqrt(2/(np.input_size + np.hidd1_size)) #(150, 784)
+        self.w1 = np.random.randn(self.hidd1_size, self.input_size) / np.sqrt(2/(self.input_size + self.hidd1_size)) #(150, 784)
+        print(self.w1.shape)
         self.b1 = np.zeros(self.hidd1_size)
-        self.w2 = np.random.randn(self.hidd2_size, self.hidd1_size) / np.sqrt(2/(np.hidd1_size + np.hidd2_size))#(150,150)
+        self.w2 = np.random.randn(self.hidd2_size, self.hidd1_size) / np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,150)
         self.b1 = np.zeros(self.hidd2_size)
-        self.w1 = np.random.randn(self.output_size, self.hidd2_size) / np.sqrt(2/(np.hidd2_size + np.output_size))#(10,150)
+        self.w1 = np.random.randn(self.output_size, self.hidd2_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(10,150)
         self.b1 = np.zeros(self.output_size)
 
         #minibatches are only for training and validating
@@ -77,3 +92,17 @@ class network:
         #
         dEdw1 = np.einsum("ij, ik -> ijk", dEdz1, self.a1) #(30,10) ein (30,150) -> (30,10,150)
         dEdb1 = dEdz1
+
+        #update params
+
+        self.w3 -= self.learning_rate * dEdw3
+        self.w2 -= self.learning_rate * dEdw2
+        self.w1 -= self.learning_rate * dEdw1
+
+        self.b3 -= self.learning_rate * dEdb3
+        self.b2 -= self.learning_rate * dEdb2
+        self.b1 -= self.learning_rate * dEdb1
+
+model= network(X_train, Y_train, X_test, Y_test, [150,150])
+model.feedforward(1)
+model.backpropagate(1)
