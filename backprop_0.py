@@ -18,18 +18,18 @@ y = np.eye(10)[Y_test.astype('int32')]
 Y_test = y
 
 def relu(z):
-    return max(0,z)
+    z[z < 0] = 0
+    return z
 
 def relu1(z):
-    return np.where(z>0, z, 0)
+    z[z <= 0] = 0
+    z[z > 0] = 1
+    return z
 
 def softmax(z):#(30,10)
-    b= np.amax(z, axis = 1)
-    s = np.exp(z-b.T)
-    print(z.shape)
-    print(b.shape)
-    print(s.shape)
-
+    b = np.max(z)
+    z = np.exp(z - b)
+    return z / np.sum(z)
 
 class network:
     def __init__(self, X_train, Y_train, X_test, Y_test, hidden_layers, learning_rate = 1, batch_size = 30):
@@ -61,11 +61,7 @@ class network:
         self.minibatches_X = np.split(self.X_train, self.minibatch_number)
         self.minibatches_Y = np.split(self.Y_train, self.minibatch_number)
 
-
-
-
     def feedforward(self, batch_index):
-
         self.z1 = self.minibatches_X[batch_index] @ self.w1.T + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
         self.a1 = relu(self.z1)
 
@@ -74,14 +70,13 @@ class network:
 
         self.z3 = self.a2 @ self.w3.T + self.b3
         self.a3 = softmax(self.z3)
+        return self.a3 
 
     def backpropagate(self, batch_index):
-
         dEdz3 = self.minibatches_Y[batch_index] * (self.a3 - 1) #(30,10)
         dEda2 = np.einsum("ij, jk -> ik", dEdz3, self.w3) #(30,10) ein (10,150) -> (30,150)
         dEdw3 = np.einsum("ij, ik -> ijk", dEdz3, self.a2) #(30,10) ein (30,150) -> (30,10,150)
         dEdb3 = dEdz3
-
 
         dEdz2 = dEda2 * relu1(self.z2) #(30,10)
         dEda1 = np.einsum("ij, jk -> ik", dEdz2, self.w2) #(30,10) ein (10,150) -> (30,150)
@@ -93,8 +88,7 @@ class network:
         dEdw1 = np.einsum("ij, ik -> ijk", dEdz1, self.a1) #(30,10) ein (30,150) -> (30,10,150)
         dEdb1 = dEdz1
 
-        #update params
-
+        # update params
         self.w3 -= self.learning_rate * dEdw3
         self.w2 -= self.learning_rate * dEdw2
         self.w1 -= self.learning_rate * dEdw1
@@ -103,8 +97,10 @@ class network:
         self.b2 -= self.learning_rate * dEdb2
         self.b1 -= self.learning_rate * dEdb1
 
-model= network(X_train, Y_train, X_test, Y_test, [150,150])
-model.feedforward(1)
-model.backpropagate(1)
+#model= network(X_train, Y_train, X_test, Y_test, [150,150])
+#model.feedforward(1)
+#model.backpropagate(1)
 
-'Babudinibich'
+z = np.array([1, 0, -1, 2, 5, -3]).reshape((6,1))
+print(relu(z))
+print(relu1(z))
