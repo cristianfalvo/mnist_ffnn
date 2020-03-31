@@ -62,15 +62,15 @@ class network:
         self.minibatches_Y = np.split(self.Y_train, self.minibatch_number)
 
     def feedforward(self, batch_index):
-        self.z1 = self.minibatches_X[batch_index] @ self.w1.T + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
+        self.z1 = self.minibatches_X[batch_index] @ self.w1 + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
         self.a1 = relu(self.z1)
 
-        self.z2 = self.a1 @ self.w2.T + self.b2
+        self.z2 = self.a1 @ self.w2 + self.b2
         self.a2 = relu(self.z2)
 
-        self.z3 = self.a2 @ self.w3.T + self.b3
+        self.z3 = self.a2 @ self.w3 + self.b3
         self.a3 = softmax(self.z3)
-        return self.a3 
+        return self.a3
 
     def backpropagate(self, batch_index):
         dEdz3 = self.minibatches_Y[batch_index] * (self.a3 - 1) #(30,10)
