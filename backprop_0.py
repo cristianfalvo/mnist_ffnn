@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib as matplotlib
+import matplotlib.pyplot as plt
 import mnist
 
 X_train = mnist.train_images()
@@ -46,12 +46,12 @@ class network:
         self.learning_rate = learning_rate
 
         #weights and biases
-        self.w1 = np.random.randn(self.hidd1_size, self.input_size) / np.sqrt(2/(self.input_size + self.hidd1_size)) #(150, 784)
+        self.w1 = np.random.randn(self.input_size, self.hidd1_size) / np.sqrt(2/(self.input_size + self.hidd1_size)) #(784, 150)
         print(self.w1.shape)
         self.b1 = np.zeros(self.hidd1_size)
-        self.w2 = np.random.randn(self.hidd2_size, self.hidd1_size) / np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,150)
+        self.w2 = np.random.randn(self.hidd1_size, self.hidd2_size) / np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,120)
         self.b2 = np.zeros(self.hidd2_size)
-        self.w3 = np.random.randn(self.output_size, self.hidd2_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(10,150)
+        self.w3 = np.random.randn(self.hidd2_size, self.output_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(120,10)
         self.b3 = np.zeros(self.output_size)
 
         #minibatches are only for training and validating
@@ -65,37 +65,44 @@ class network:
         self.z1 = self.minibatches_X[batch_index] @ self.w1 + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
         self.a1 = relu(self.z1)
 
-        self.z2 = self.a1 @ self.w2 + self.b2
+        self.z2 = self.a1 @ self.w2 + self.b2 # (30,150) @ (150,120) + (120) -> (30,120)
         self.a2 = relu(self.z2)
 
-        self.z3 = self.a2 @ self.w3 + self.b3
+        self.z3 = self.a2 @ self.w3 + self.b3 # (30,120) @ (120,10) + (10) -> (30,10)
         self.a3 = softmax(self.z3)
         return self.a3
 
     def backpropagate(self, batch_index):
         dEdz3 = self.minibatches_Y[batch_index] * (self.a3 - 1) #(30,10)
-        dEda2 = np.einsum("ij, jk -> ik", dEdz3, self.w3) #(30,10) ein (10,150) -> (30,150)
-        dEdw3 = np.einsum("ij, ik -> ijk", dEdz3, self.a2) #(30,10) ein (30,150) -> (30,10,150)
+        dEda2 = np.einsum("ij, jk -> ik", dEdz3, self.w3.T) #(30,10) ein (10,120) -> (30,120)
+        #dEdw3 = np.einsum("ij, ik -> ijk", dEdz3, self.a2) #(30,10) ein (30,120) -> (30,10,120)
+        dEdw3 = np.einsum("ij, ik -> ikj", dEdz3, self.a2) #(30,10) ein (30,120) -> (30,120,10)
         dEdb3 = dEdz3
 
         dEdz2 = dEda2 * relu1(self.z2) #(30,10)
-        dEda1 = np.einsum("ij, jk -> ik", dEdz2, self.w2) #(30,10) ein (10,150) -> (30,150)
-        dEdw2 = np.einsum("ij, ik -> ijk", dEdz2, self.a2) #(30,10) ein (30,150) -> (30,10,150)
+        dEda1 = np.einsum("ij, jk -> ik", dEdz2, self.w2.T) #(30,120) ein (120,150) -> (30,150)
+        #dEdw2 = np.einsum("ij, ik -> ijk", dEdz2, self.a1)
+        dEdw2 = np.einsum("ij, ik -> ikj", dEdz2, self.a1) #(30,120) ein (30,150) -> (30,150, 120)
         dEdb2 = dEdz2
 
-        dEdz1 = dEda1 * relu1(self.z1)
+        dEdz1 = dEda1 * relu1(self.z1) #(30,150)
         #
-        dEdw1 = np.einsum("ij, ik -> ijk", dEdz1, self.a1) #(30,10) ein (30,150) -> (30,10,150)
+        #dEdw1 = np.einsum("ij, ik -> ijk", dEdz1, self.minibatches_X[batch_index])
+        dEdw1 = np.einsum("ij, ik -> ikj", dEdz1, self.minibatches_X[batch_index]) #(30,150) ein (30,784) -> (30,784,150)
         dEdb1 = dEdz1
 
         # update params
-        self.w3 -= self.learning_rate * dEdw3
-        self.w2 -= self.learning_rate * dEdw2
-        self.w1 -= self.learning_rate * dEdw1
+        self.w3 -= self.learning_rate * np.sum(dEdw3, axis = 0)
+        self.w2 -= self.learning_rate * np.sum(dEdw2, axis = 0)
+        self.w1 -= self.learning_rate * np.sum(dEdw1, axis = 0)
 
-        self.b3 -= self.learning_rate * dEdb3
-        self.b2 -= self.learning_rate * dEdb2
-        self.b1 -= self.learning_rate * dEdb1
+        self.b3 -= self.learning_rate * np.sum(dEdb3, axis = 0)
+        self.b2 -= self.learning_rate * np.sum(dEdb2, axis = 0)
+        self.b1 -= self.learning_rate * np.sum(dEdb1, axis = 0)
+
+    def calc_error(self, batch_index):
+        E = np.sum(-1 * self.minibatches_Y[batch_index] * np.log(self.a3), axis = 1)
+        return np.average(E)
 
 #model= network(X_train, Y_train, X_test, Y_test, [150,150])
 #model.feedforward(1)
@@ -104,3 +111,33 @@ class network:
 z = np.array([1, 0, -1, 2, 5, -3]).reshape((6,1))
 print(relu(z))
 print(relu1(z))
+
+model = network(X_train, Y_train, X_test, Y_test, [150,120])
+order = np.random.permutation(model.minibatch_number)
+train = True
+train_errors = []
+validation_errors = []
+#pessima implementazione di un'epoch ma non avevo voglia di fare cose più complicate
+for batch in order:
+    print("Iteration: " + str(batch))
+    if train:
+        model.feedforward(batch)
+        err  = model.calc_error(batch)
+        train_errors.append(err)
+        model.backpropagate(batch)
+        train = False
+    else:
+        model.feedforward(batch)
+        err = model.calc_error(batch)
+        validation_errors.append(err)
+        train = True
+
+t = np.asarray(train_errors)
+v = np.asarray(validation_errors)
+normalized_errors = np.abs(t-v) / np.abs(t+v)
+
+fig, axs = plt.subplots(2)
+axs[0].plot(train_errors, "b")
+axs[0].plot(validation_errors, "r")
+axs[1].plot(normalized_errors)
+plt.show()
