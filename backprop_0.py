@@ -27,9 +27,10 @@ def relu1(z):
     return z
 
 def softmax(z):#(30,10)
-    b = np.max(z)
-    z = np.exp(z - b)
-    return z / np.sum(z)
+    b = np.max(z, axis = 1) #(30)
+    z = np.exp(z.T - b).T #(30,10)
+    out = z.T / np.sum(z, axis = 1) #(10,30)/(30)
+    return out.T
 
 class network:
     def __init__(self, X_train, Y_train, X_test, Y_test, hidden_layers, learning_rate = 1, batch_size = 30):
@@ -118,7 +119,7 @@ train = True
 train_errors = []
 validation_errors = []
 #pessima implementazione di un'epoch ma non avevo voglia di fare cose più complicate
-for batch in order:
+'''for batch in order:
     print("Iteration: " + str(batch))
     if train:
         model.feedforward(batch)
@@ -140,4 +141,8 @@ fig, axs = plt.subplots(2)
 axs[0].plot(train_errors, "b")
 axs[0].plot(validation_errors, "r")
 axs[1].plot(normalized_errors)
-plt.show()
+plt.show()'''
+
+model.feedforward(0)
+print(model.z3)
+print(model.a3)
