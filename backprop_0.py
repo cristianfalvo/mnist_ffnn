@@ -47,12 +47,13 @@ class network:
         self.learning_rate = learning_rate
 
         #weights and biases
-        self.w1 = np.random.randn(self.input_size, self.hidd1_size) / np.sqrt(2/(self.input_size + self.hidd1_size)) #(784, 150)
-        print(self.w1.shape)
+        self.w1 = np.random.randn(self.input_size, self.hidd1_size) * np.sqrt(2/(self.input_size + self.hidd1_size)) #(784, 150)
+        print(self.w1)
+        #print(self.w1.shape)
         self.b1 = np.zeros(self.hidd1_size)
-        self.w2 = np.random.randn(self.hidd1_size, self.hidd2_size) / np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,120)
+        self.w2 = np.random.randn(self.hidd1_size, self.hidd2_size) * np.sqrt(2/(self.hidd1_size + self.hidd2_size))#(150,120)
         self.b2 = np.zeros(self.hidd2_size)
-        self.w3 = np.random.randn(self.hidd2_size, self.output_size) / np.sqrt(2/(self.hidd2_size + self.output_size))#(120,10)
+        self.w3 = np.random.randn(self.hidd2_size, self.output_size) * np.sqrt(2/(self.hidd2_size + self.output_size))#(120,10)
         self.b3 = np.zeros(self.output_size)
 
         #minibatches are only for training and validating
@@ -109,9 +110,9 @@ class network:
 #model.feedforward(1)
 #model.backpropagate(1)
 
-z = np.array([1, 0, -1, 2, 5, -3]).reshape((6,1))
+'''z = np.array([1, 0, -1, 2, 5, -3]).reshape((6,1))
 print(relu(z))
-print(relu1(z))
+print(relu1(z))'''
 
 model = network(X_train, Y_train, X_test, Y_test, [150,120])
 order = np.random.permutation(model.minibatch_number)
