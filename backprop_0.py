@@ -10,7 +10,6 @@ Y_test = mnist.test_labels()
 
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]**2))/255
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1]**2))/255
-print(X_train.shape)
 
 y = np.eye(10)[Y_train.astype('int32')]
 Y_train = y
@@ -33,7 +32,7 @@ def softmax(z):#(30,10)
     return out.T
 
 class network:
-    def __init__(self, X_train, Y_train, X_test, Y_test, hidden_layers, learning_rate = 1, batch_size = 30):
+    def __init__(self, X_train, Y_train, X_test, Y_test, hidden_layers, learning_rate = 1e-2, batch_size = 30):
         self.X_train = X_train
         self.Y_train = Y_train
         self.X_test = X_test
@@ -72,6 +71,7 @@ class network:
 
         self.z3 = self.a2 @ self.w3 + self.b3 # (30,120) @ (120,10) + (10) -> (30,10)
         self.a3 = softmax(self.z3)
+        #print(self.a3)
         return self.a3
 
     def backpropagate(self, batch_index):
@@ -120,7 +120,7 @@ train = True
 train_errors = []
 validation_errors = []
 #pessima implementazione di un'epoch ma non avevo voglia di fare cose più complicate
-'''for batch in order:
+for batch in order:
     print("Iteration: " + str(batch))
     if train:
         model.feedforward(batch)
@@ -142,8 +142,9 @@ fig, axs = plt.subplots(2)
 axs[0].plot(train_errors, "b")
 axs[0].plot(validation_errors, "r")
 axs[1].plot(normalized_errors)
-plt.show()'''
+plt.show()
 
-model.feedforward(0)
+'''model.feedforward(0)
 print(model.z3)
 print(model.a3)
+'''
