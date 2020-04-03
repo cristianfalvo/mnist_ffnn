@@ -72,12 +72,12 @@ class network:
         self.minibatches_X = np.split(self.X_train, self.minibatch_number)
         self.minibatches_Y = np.split(self.Y_train, self.minibatch_number)
 
-    def feedforward(self, batch_index, option = "train"):
+    def feedforward(self, index, option = "train"):
         #self.z1 = self.minibatches_X[batch_index] @ self.w1 + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
         if option=="train":
-            self.z1 = self.X_train[batch_index] @ self.w1 + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
+            self.z1 = self.X_train[index] @ self.w1 + self.b1 # (30, 784) @ (784, 150) + (150) -> (30,150)
         else:
-            self.z1 = self.X_test[batch_index] @ self.w1 + self.b1
+            self.z1 = self.X_test[index] @ self.w1 + self.b1
         #self.a1 = relu(self.z1)
         self.a1 = relu(self.z1)
 
@@ -144,11 +144,8 @@ class network:
         '''        print("check")
         print(np.sum(self.a3, axis = 1))
         '''
-    def backpropagate(self, index, option = "train"):
-        if option == "train":
-            dEdz3 = self.Y_train[index] * (self.a3 - 1) #(10)
-        else:
-            dEdz3 = self.Y_test[index] * (self.a3 - 1) # (10)
+    def backpropagate(self, index):
+        dEdz3 = self.Y_train[index] * (self.a3 - 1) #(10)
         dEda2 = np.matmul(self.w3, dEdz3) # (120, 10) * (10) = (120)
         dEdw3 = np.outer(self.a2, dEdz3) # (120) * (10) -> (120, 10)
         dEdb3 = dEdz3
@@ -162,10 +159,7 @@ class network:
         #dEdz1 = dEda1 * relu1(self.z1)
         dEdz1 = dEda1 * self.a1 * (1-self.a1)
         dEdb1 = dEdz1
-        if option=="train":
-            dEdw1 = np.outer(self.X_train[index], dEdz1)
-        else:
-            dEdw1 = np.outer(self.X_test[index], dEdz1)
+        dEdw1 = np.outer(self.X_train[index], dEdz1)
 
         self.w3 -= self.learning_rate * dEdw3
         self.w2 -= self.learning_rate * dEdw2
@@ -220,8 +214,9 @@ axs[0].plot(validation_errors, "r")
 axs[1].plot(normalized_errors)
 plt.show()
 
-quit()
 #non batch learning
+train_errors = []
+validation_errors = []
 order = np.random.permutation(model.n_train_ex)
 print(model.n_train_ex)
 
